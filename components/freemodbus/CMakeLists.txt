@@ -1,6 +1,7 @@
 # The following five lines of boilerplate have to be in your project's
 # CMakeLists in this exact order for cmake to work correctly
-set(srcs  
+cmake_minimum_required(VERSION 3.5)
+set(COMPONENT_SRCS
     "common/esp_modbus_master.c"
     "common/esp_modbus_slave.c"
     "modbus/mb.c"
@@ -32,13 +33,13 @@ set(srcs
     "modbus/functions/mbutils.c"
     "serial_slave/modbus_controller/mbc_serial_slave.c"
     "serial_master/modbus_controller/mbc_serial_master.c")
-set(include_dirs common/include)
-set(priv_include_dirs common port modbus modbus/ascii modbus/functions
-                                modbus/rtu modbus/tcp modbus/include)
-list(APPEND priv_include_dirs serial_slave/port serial_slave/modbus_controller
-                                        serial_master/port serial_master/modbus_controller)
 
-idf_component_register(SRCS "${srcs}"
-                    INCLUDE_DIRS "${include_dirs}"
-                    PRIV_INCLUDE_DIRS "${priv_include_dirs}"
-                    REQUIRES driver)
+set(COMPONENT_ADD_INCLUDEDIRS common/include)
+set(COMPONENT_PRIV_INCLUDEDIRS common port modbus modbus/ascii modbus/functions
+                                modbus/rtu modbus/tcp modbus/include serial_master/modbus_controller
+                                serial_slave/port serial_slave/modbus_controller
+                                serial_master/port serial_master/modbus_controller)
+
+set(COMPONENT_REQUIRES "driver")
+
+register_component()
