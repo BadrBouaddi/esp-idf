@@ -409,9 +409,9 @@ eMBMasterPoll( void )
             ( void ) xMBMasterPortEventPost( eEvent );
         }
     } else {
-        // Something went wrong and task unblocked but there are no any correct events set
-        ESP_LOGE( MB_PORT_TAG, "%s: Unexpected event triggered %d.", __func__, eEvent );
-        eStatus = MB_EILLSTATE;
+        // xMBMasterPortEventGet has unbloked the task but the event bits are not set
+        ESP_LOGD(MB_PORT_TAG, "%s: task event wait failure.", __func__);
+        return MB_ETIMEDOUT;
     }
     return eStatus;
 }

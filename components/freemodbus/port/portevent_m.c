@@ -83,7 +83,6 @@ xMBMasterPortEventPost( eMBMasterEventType eEvent )
 {
     BOOL bStatus = FALSE;
     eMBMasterEventType eTempEvent = eEvent;
-
     if( (BOOL)xPortInIsrContext() == TRUE )
     {
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
@@ -117,11 +116,12 @@ xMBMasterPortEventGet( eMBMasterEventType * eEvent)
 {
     EventBits_t uxBits;
     BOOL    xEventHappened = FALSE;
-    uxBits = xEventGroupWaitBits( xEventGroupMasterHdl, // The event group being tested.
-                                    MB_EVENT_POLL_MASK, // The bits within the event group to wait for.
-                                    pdTRUE,             // Masked bits should be cleared before returning.
-                                    pdFALSE,            // Don't wait for both bits, either bit will do.
-                                    portMAX_DELAY);     // Wait forever for either bit to be set.
+    uxBits = xEventGroupWaitBits(
+            xEventGroupMasterHdl,   // The event group being tested.
+            MB_EVENT_POLL_MASK,     // The bits within the event group to wait for.
+            pdTRUE,                 // Masked bits should be cleared before returning.
+            pdFALSE,                // Don't wait for both bits, either bit will do.
+            2100);        // Wait forever for either bit to be set.
 
     // Check if poll event is correct
     if (MB_PORT_CHECK_EVENT(uxBits, MB_EVENT_POLL_MASK)) {
@@ -130,6 +130,9 @@ xMBMasterPortEventGet( eMBMasterEventType * eEvent)
     } else {
         ESP_LOGE(MB_PORT_TAG,"%s: Incorrect event triggered = %d.", __func__, uxBits);
         *eEvent = (eMBMasterEventType)uxBits;
+        vMBMasterSetErrorType(EV_ERROR_RESPOND_TIMEOUT);
+        xMBMasterPortEventPost(EV_MASTER_ERROR_PROCESS);
+        ESP_LOGE(MB_PORT_TAG,"%s: Incorrect event triggered.", __func__);
         xEventHappened = FALSE;
     }
     return xEventHappened;
