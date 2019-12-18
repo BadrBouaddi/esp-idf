@@ -121,7 +121,7 @@ xMBMasterPortEventGet( eMBMasterEventType * eEvent)
             MB_EVENT_POLL_MASK,     // The bits within the event group to wait for.
             pdTRUE,                 // Masked bits should be cleared before returning.
             pdFALSE,                // Don't wait for both bits, either bit will do.
-            2100);        // Wait forever for either bit to be set.
+            3100);        // Wait forever for either bit to be set. TODO EQ-907
 
     // Check if poll event is correct
     if (MB_PORT_CHECK_EVENT(uxBits, MB_EVENT_POLL_MASK)) {
@@ -130,7 +130,7 @@ xMBMasterPortEventGet( eMBMasterEventType * eEvent)
     } else {
         vMBMasterSetErrorType(EV_ERROR_RESPOND_TIMEOUT);
         xMBMasterPortEventPost(EV_MASTER_ERROR_PROCESS);
-        ESP_LOGE(MB_PORT_TAG,"%s: Incorrect event triggered.", __func__);
+        //ESP_LOGE(MB_PORT_TAG,"%s: Incorrect event triggered.", __func__); TODO EQ-907
         xEventHappened = FALSE;
     }
     return xEventHappened;
