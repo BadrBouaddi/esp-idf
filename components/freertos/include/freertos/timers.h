@@ -1247,6 +1247,19 @@ const char * pcTimerGetTimerName( TimerHandle_t xTimer ); /*lint !e971 Unqualifi
 BaseType_t xTimerCreateTimerTask( void ) PRIVILEGED_FUNCTION;
 BaseType_t xTimerGenericCommand( TimerHandle_t xTimer, const BaseType_t xCommandID, const TickType_t xOptionalValue, BaseType_t * const pxHigherPriorityTaskWoken, const TickType_t xTicksToWait ) PRIVILEGED_FUNCTION;
 
+/**
+ * Defines the prototype to which timer callback function metric must conform.
+ */
+typedef void MetricTimerErrorQueuefull_func_t(void);
+
+/**
+ * Set callback to manage timer metric in application level
+ *
+ * @param *callbackMetricInc callback metric pointer to set
+ *
+ */
+void xTimerSetCallbackmMetric(MetricTimerErrorQueuefull_func_t *callbackMetricInc);
+
 /** @endcond */
 
 #ifdef __cplusplus

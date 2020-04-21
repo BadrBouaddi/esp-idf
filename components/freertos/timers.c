@@ -80,7 +80,6 @@ task.h is included from an application file. */
 #include "queue.h"
 #include "timers.h"
 #include "portmacro.h"
-#include "eeprom_app.h"
 
 #if ( INCLUDE_xTimerPendFunctionCall == 1 ) && ( configUSE_TIMERS == 0 )
 	#error configUSE_TIMERS must be set to 1 to make the xTimerPendFunctionCall() function available.
@@ -176,6 +175,9 @@ PRIVILEGED_DATA static QueueHandle_t xTimerQueue = NULL;
 
 /* Mux. We use a single mux for all the timers for now. ToDo: maybe increase granularity here? */
 PRIVILEGED_DATA portMUX_TYPE xTimerMux = portMUX_INITIALIZER_UNLOCKED;
+
+/* Metric callback to increment timer queue full error counter */
+static MetricTimerErrorQueuefull_func_t * _cbkMetricTimerErrorQueuefull;
 
 #if ( INCLUDE_xTimerGetTimerDaemonTaskHandle == 1 )
 
@@ -403,7 +405,11 @@ static void prvInitialiseNewTimer(	const char * const pcTimerName,
 	}
 }
 /*-----------------------------------------------------------*/
-
+void xTimerSetCallbackmMetric(MetricTimerErrorQueuefull_func_t callbackMetricInc)
+{
+    _cbkMetricTimerErrorQueuefull = callbackMetricInc;
+}
+/*-----------------------------------------------------------*/
 BaseType_t xTimerGenericCommand( TimerHandle_t xTimer, const BaseType_t xCommandID, const TickType_t xOptionalValue, BaseType_t * const pxHigherPriorityTaskWoken, const TickType_t xTicksToWait )
 {
 BaseType_t xReturn = pdFAIL;
@@ -442,12 +448,12 @@ DaemonTaskMessage_t xMessage;
 	}
 
     /* Notify error Queue Full */
-    if( xReturn == errQUEUE_FULL )
+    if ((_cbkMetricTimerErrorQueuefull != NULL) && (xReturn == errQUEUE_FULL))
     {
-         EEPROM_APP_MetricsIncValue(METRIC_TIMER_ERROR_QUEUE_FULL);
+        _cbkMetricTimerErrorQueuefull();
     }
 
-	return xReturn;
+    return xReturn;
 }
 /*-----------------------------------------------------------*/
 
