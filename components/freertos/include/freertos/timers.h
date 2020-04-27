@@ -1258,7 +1258,7 @@ typedef void MetricTimerErrorQueuefull_func_t(void);
  * @param *callbackMetricInc callback metric pointer to set
  *
  */
-void xTimerSetCallbackmMetric(MetricTimerErrorQueuefull_func_t *callbackMetricInc);
+void xTimerSetCallbackMetric(MetricTimerErrorQueuefull_func_t *callbackMetricInc);
 
 /** @endcond */
 

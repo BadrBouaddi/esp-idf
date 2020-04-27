@@ -408,7 +408,7 @@ static void prvInitialiseNewTimer(	const char * const pcTimerName,
 	}
 }
 /*-----------------------------------------------------------*/
-void xTimerSetCallbackmMetric(MetricTimerErrorQueuefull_func_t callbackMetricInc)
+void xTimerSetCallbackMetric(MetricTimerErrorQueuefull_func_t callbackMetricInc)
 {
     _cbkMetricTimerErrorQueuefull = callbackMetricInc;
 }
