@@ -101,6 +101,9 @@ configUSE_TIMERS is set to 1 in FreeRTOSConfig.h. */
 /* Misc definitions. */
 #define tmrNO_DELAY		( TickType_t ) 0U
 
+#define PTR_INDEX_QUEUE_MESSAGES_WAITING_ADDR       (0x38)
+#define PTR_INDEX_QUEUE_LENGTH_ADDR                 (0x3C)
+
 /* The definition of the timers themselves. */
 typedef struct tmrTimerControl
 {
@@ -175,6 +178,9 @@ PRIVILEGED_DATA static QueueHandle_t xTimerQueue = NULL;
 
 /* Mux. We use a single mux for all the timers for now. ToDo: maybe increase granularity here? */
 PRIVILEGED_DATA portMUX_TYPE xTimerMux = portMUX_INITIALIZER_UNLOCKED;
+
+/* Metric callback to increment timer queue full error counter */
+static MetricTimerErrorQueuefull_func_t * _cbkMetricTimerErrorQueuefull;
 
 #if ( INCLUDE_xTimerGetTimerDaemonTaskHandle == 1 )
 
@@ -402,7 +408,11 @@ static void prvInitialiseNewTimer(	const char * const pcTimerName,
 	}
 }
 /*-----------------------------------------------------------*/
-
+void xTimerSetCallbackMetric(MetricTimerErrorQueuefull_func_t callbackMetricInc)
+{
+    _cbkMetricTimerErrorQueuefull = callbackMetricInc;
+}
+/*-----------------------------------------------------------*/
 BaseType_t xTimerGenericCommand( TimerHandle_t xTimer, const BaseType_t xCommandID, const TickType_t xOptionalValue, BaseType_t * const pxHigherPriorityTaskWoken, const TickType_t xTicksToWait )
 {
 BaseType_t xReturn = pdFAIL;
@@ -440,7 +450,15 @@ DaemonTaskMessage_t xMessage;
 		mtCOVERAGE_TEST_MARKER();
 	}
 
-	return xReturn;
+    /* Notify error Queue Full */
+    if ((xCommandID < tmrFIRST_FROM_ISR_COMMAND)
+    && (_cbkMetricTimerErrorQueuefull != NULL)
+    && ((*(UBaseType_t*)(xTimerQueue + PTR_INDEX_QUEUE_MESSAGES_WAITING_ADDR)) >= (*(UBaseType_t*)(xTimerQueue + PTR_INDEX_QUEUE_LENGTH_ADDR))))
+    {
+        _cbkMetricTimerErrorQueuefull();
+    }
+
+    return xReturn;
 }
 /*-----------------------------------------------------------*/
 
