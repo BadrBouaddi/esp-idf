@@ -102,7 +102,7 @@ configUSE_TIMERS is set to 1 in FreeRTOSConfig.h. */
 #define tmrNO_DELAY		( TickType_t ) 0U
 
 #define PTR_INDEX_QUEUE_MESSAGES_WAITING_ADDR       (0x38)
-#define PTR_INDEX_QUEUE_LENFTH_ADDR                 (0x3C)
+#define PTR_INDEX_QUEUE_LENGTH_ADDR                 (0x3C)
 
 /* The definition of the timers themselves. */
 typedef struct tmrTimerControl
@@ -453,7 +453,7 @@ DaemonTaskMessage_t xMessage;
     /* Notify error Queue Full */
     if ((xCommandID < tmrFIRST_FROM_ISR_COMMAND)
     && (_cbkMetricTimerErrorQueuefull != NULL)
-    && ((*(UBaseType_t*)(xTimerQueue + PTR_INDEX_QUEUE_MESSAGES_WAITING_ADDR)) >= (*(UBaseType_t*)(xTimerQueue + PTR_INDEX_QUEUE_LENFTH_ADDR))))
+    && ((*(UBaseType_t*)(xTimerQueue + PTR_INDEX_QUEUE_MESSAGES_WAITING_ADDR)) >= (*(UBaseType_t*)(xTimerQueue + PTR_INDEX_QUEUE_LENGTH_ADDR))))
     {
         _cbkMetricTimerErrorQueuefull();
     }
