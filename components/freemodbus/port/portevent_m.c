@@ -281,12 +281,7 @@ eMBMasterReqErrCode eMBMasterWaitRequestFinish( void ) {
         }
     } else {
         ESP_LOGE(MB_PORT_TAG,"%s: Incorrect event or timeout xRecvedEvent = 0x%x", __func__, uxBits);
-        // https://github.com/espressif/esp-idf/issues/5275
-        // if a no event is received, that means vMBMasterPortEventClose
-        // has been closed, so event group has been deleted by FreeRTOS, which
-        // triggers the send of 0 value to the event group to unlock this task
-        // waiting on it. For this patch, handles it as a time out without assert.
-        eErrStatus = MB_MRE_TIMEDOUT;
+        assert(0);
     }
     return eErrStatus;
 }
