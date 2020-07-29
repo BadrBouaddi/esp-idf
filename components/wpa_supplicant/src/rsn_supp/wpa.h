@@ -25,6 +25,7 @@
 #include "utils/common.h"
 #include "common/defs.h"
 #include "common/wpa_common.h"
+#include "esp_wifi_types.h"
 #include "esp_wifi_crypto_types.h"
 #include "wpa_i.h"
 
@@ -118,7 +119,7 @@ void wpa_sm_set_state(enum wpa_states state);
 
 char * dup_binstr(const void *src, size_t len);
 
-void wpa_set_pmk(uint8_t *pmk);
+void wpa_set_pmk(uint8_t *pmk, const u8 *pmkid, bool cache_pmksa);
 
 int wpa_hook_init(void);
 
@@ -127,6 +128,12 @@ bool wpa_hook_deinit(void);
 char * dup_binstr(const void *src, size_t len);
 
 int wpa_michael_mic_failure(u16 isunicast);
+
+wifi_cipher_type_t cipher_type_map_supp_to_public(uint32_t wpa_cipher);
+
+uint32_t cipher_type_map_supp_to_public(wifi_cipher_type_t cipher);
+
+void wpa_sta_clear_curr_pmksa(void);
 
 #endif /* WPA_H */
 

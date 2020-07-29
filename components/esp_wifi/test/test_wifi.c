@@ -169,6 +169,8 @@ TEST_CASE("wifi stop and deinit","[wifi]")
     TEST_IGNORE_MESSAGE("this test case is ignored due to the critical memory leak of esp_netif and event_loop.");
 }
 
+#if !TEMPORARY_DISABLED_FOR_TARGETS(ESP32S2BETA)
+
 static void start_wifi_as_softap(void)
 {
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
@@ -287,7 +289,8 @@ static void wifi_connect_by_bssid(uint8_t *bssid)
 
     TEST_ESP_OK(esp_wifi_set_config(WIFI_IF_STA, &w_config));
     TEST_ESP_OK(esp_wifi_connect());
-    bits = xEventGroupWaitBits(wifi_events, GOT_IP_EVENT, 1, 0, 5000/portTICK_RATE_MS);
+    ESP_LOGI(TAG, "called esp_wifi_connect()");
+    bits = xEventGroupWaitBits(wifi_events, GOT_IP_EVENT, 1, 0, 7000/portTICK_RATE_MS);
     TEST_ASSERT(bits == GOT_IP_EVENT);
 }
 
@@ -339,3 +342,5 @@ static void test_wifi_connection_softap(void)
 }
 
 TEST_CASE_MULTIPLE_DEVICES("test wifi retain connection for 60s", "[wifi][test_env=UT_T2_1][timeout=90]", test_wifi_connection_sta, test_wifi_connection_softap);
+
+#endif

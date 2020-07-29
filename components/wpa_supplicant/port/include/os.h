@@ -21,7 +21,7 @@
 #include "esp_err.h"
 // #include "esp32/rom/ets_sys.h"
 
-typedef long os_time_t;
+typedef time_t os_time_t;
 
 /**
  * os_sleep - Sleep (sec, usec)
@@ -32,7 +32,7 @@ void os_sleep(os_time_t sec, os_time_t usec);
 
 struct os_time {
 	os_time_t sec;
-	os_time_t usec;
+	suseconds_t usec;
 };
 
 /**
@@ -263,8 +263,7 @@ char * ets_strdup(const char *s);
 #define os_strncpy(d, s, n) strncpy((d), (s), (n))
 #endif
 #ifndef os_strrchr
-//hard cold
-#define os_strrchr(s, c)  NULL
+#define os_strrchr(s, c)  strrchr((s), (c))
 #endif
 #ifndef os_strstr
 #define os_strstr(h, n) strstr((h), (n))
