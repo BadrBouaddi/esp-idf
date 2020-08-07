@@ -736,10 +736,9 @@ static inline void uart_ll_get_data_bit_num(uart_dev_t *hw, uart_word_length_t *
  *
  * @return True if the state machine is in the IDLE state, otherwise false is returned.
  */
-static inline bool uart_ll_is_tx_idle(uart_dev_t *hw)
+static __attribute__((always_inline)) inline bool uart_ll_is_tx_idle(uart_dev_t *hw)
 {
-    typeof(hw->status) status = hw->status;
-    return ((status.txfifo_cnt == 0) && (status.st_utx_out == 0));
+    return ((hw->status.txfifo_cnt == 0) && (hw->status.st_utx_out == 0));
 }
 
 /**
