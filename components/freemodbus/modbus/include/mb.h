@@ -71,15 +71,10 @@ PR_BEGIN_EXTERN_C
 /*! \ingroup modbus
  * \brief Use the default Modbus TCP port (502)
  */
-#define MB_TCP_PORT_USE_DEFAULT 0
+#define MB_TCP_PORT_USE_DEFAULT 0   
 
 #define MB_FUNC_CODE_MAX 127
-
 /* ----------------------- Type definitions ---------------------------------*/
-#ifndef _MB_M_H
-
-#define MB_FUNC_CODE_MAX 127
-
 /*! \ingroup modbus
  * \brief Modbus serial transmission modes (RTU/ASCII).
  *
@@ -125,8 +120,6 @@ typedef enum
     MB_EILLSTATE,               /*!< protocol stack in illegal state. */
     MB_ETIMEDOUT                /*!< timeout error occurred. */
 } eMBErrorCode;
-
-#endif
 
 /* ----------------------- Function prototypes ------------------------------*/
 /*! \ingroup modbus

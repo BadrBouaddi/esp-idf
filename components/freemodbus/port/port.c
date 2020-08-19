@@ -37,12 +37,12 @@
 
 /* ----------------------- Modbus includes ----------------------------------*/
 #include "freertos/FreeRTOS.h"
-#include "freertos/portmacro.h"
 #include "sys/lock.h"
 #include "port.h"
 
 /* ----------------------- Variables ----------------------------------------*/
 static _lock_t s_port_lock;
+static UCHAR ucPortMode = 0;
 
 /* ----------------------- Start implementation -----------------------------*/
 inline void
@@ -55,4 +55,18 @@ inline void
 vMBPortExitCritical(void)
 {
     _lock_release(&s_port_lock);
+}
+
+UCHAR
+ucMBPortGetMode( void ) // TODO renamed based on EQ-703
+{
+    return ucPortMode;
+}
+
+void
+vMBPortSetMode( UCHAR ucMode ) // TODO renamed based on EQ-703
+{
+    ENTER_CRITICAL_SECTION();
+    ucPortMode = ucMode;
+    EXIT_CRITICAL_SECTION();
 }
