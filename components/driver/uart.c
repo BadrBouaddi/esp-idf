@@ -502,6 +502,7 @@ esp_err_t uart_disable_pattern_det_intr(uart_port_t uart_num)
 
 esp_err_t uart_enable_rx_intr(uart_port_t uart_num)
 {
+    esp_intr_enable(p_uart_obj[uart_num]->intr_handle);
     return uart_enable_intr_mask(uart_num, UART_INTR_RXFIFO_FULL|UART_INTR_RXFIFO_TOUT);
 }
 
