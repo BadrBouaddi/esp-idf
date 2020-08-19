@@ -109,7 +109,7 @@ BOOL xMBMasterPortTimersInit(USHORT usTimeOut50us)
                     (uint32_t)xErr);
     // Register ISR for timer
     xErr = timer_isr_register(usTimerGroupIndex, usTimerIndex,
-                                vTimerGroupIsr, (void*)(uint32_t)usTimerIndex, MB_PORT_TIMER_ISR_FLAG, &xTimerIntHandle);
+                                vTimerGroupIsr, (void*)(uint32_t)usTimerIndex, MB_PORT_TIMER_ISR_FLAG | ESP_INTR_FLAG_INTRDISABLED, &xTimerIntHandle);
     MB_PORT_CHECK((xErr == ESP_OK), FALSE,
                     "timer set value failure, timer_isr_register() returned (0x%x).",
                     (uint32_t)xErr);
@@ -141,6 +141,7 @@ static BOOL xMBMasterPortTimersEnable(USHORT usTimerTics50us)
     MB_PORT_CHECK((xErr == ESP_OK), FALSE,
                             "timer enable interrupt failure, timer_enable_intr() returned (0x%x).",
                             (uint32_t)xErr);
+    esp_intr_enable(xTimerIntHandle);
     xErr = timer_start(usTimerGroupIndex, usTimerIndex); // start timer
     MB_PORT_CHECK((xErr == ESP_OK), FALSE,
                             "timer start failure, timer_start() returned (0x%x).",

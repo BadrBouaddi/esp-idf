@@ -94,9 +94,9 @@ void vMBPortSerialEnable(BOOL bRxEnable, BOOL bTxEnable)
         bTxStateEnabled = FALSE;
     }
     if (bRxEnable) {
-        //uart_enable_rx_intr(ucUartNumber);
         bRxStateEnabled = TRUE;
         vTaskResume(xMbTaskHandle); // Resume receiver task
+        uart_enable_rx_intr(ucUartNumber);
     } else {
         vTaskSuspend(xMbTaskHandle); // Block receiver task
         bRxStateEnabled = FALSE;
@@ -246,7 +246,7 @@ BOOL xMBPortSerialInit(UCHAR ucPORT, ULONG ulBaudRate,
             FALSE, "mb config failure, uart_param_config() returned (0x%x).", xErr);
     // Install UART driver, and get the queue.
     xErr = uart_driver_install(ucUartNumber, MB_SERIAL_BUF_SIZE, MB_SERIAL_BUF_SIZE,
-                                    MB_QUEUE_LENGTH, &xMbUartQueue, MB_PORT_SERIAL_ISR_FLAG);
+                                    MB_QUEUE_LENGTH, &xMbUartQueue, MB_PORT_SERIAL_ISR_FLAG | ESP_INTR_FLAG_INTRDISABLED);
     MB_PORT_CHECK((xErr == ESP_OK), FALSE,
             "mb serial driver failure, uart_driver_install() returned (0x%x).", xErr);
 #ifndef MB_TIMER_PORT_ENABLED
