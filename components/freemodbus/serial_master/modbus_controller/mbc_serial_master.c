@@ -538,6 +538,7 @@ eMBErrorCode eMBRegInputCBSerialMaster(UCHAR * pucRegBuffer, USHORT usAddress,
         }
     } else {
         eStatus = MB_ENOREG;
+        ESP_LOGE(MB_MASTER_TAG, "IR %d %d %d", usAddress, usNRegs, usRegInputNregs);
     }
     return eStatus;
 }
@@ -588,6 +589,7 @@ eMBErrorCode eMBRegHoldingCBSerialMaster(UCHAR * pucRegBuffer, USHORT usAddress,
         }
     } else {
         eStatus = MB_ENOREG;
+        ESP_LOGE(MB_MASTER_TAG, "HR %d %d %d %d", usAddress, usNRegs, usRegHoldingNregs, eMode);
     }
     return eStatus;
 }
@@ -642,6 +644,7 @@ eMBErrorCode eMBRegCoilsCBSerialMaster(UCHAR* pucRegBuffer, USHORT usAddress,
     } else {
         // If the configuration or input parameters are incorrect then return error to stack
         eStatus = MB_ENOREG;
+        ESP_LOGE(MB_MASTER_TAG, "Coil %d %d %d %d", usAddress, usNCoils, usRegCoilNregs, eMode);
     }
     return eStatus;
 }
@@ -691,6 +694,7 @@ eMBErrorCode eMBRegDiscreteCBSerialMaster(UCHAR * pucRegBuffer, USHORT usAddress
         }
     } else {
         eStatus = MB_ENOREG;
+        ESP_LOGE(MB_MASTER_TAG, "DI %d %d %d", usAddress, usNDiscrete, usRegDiscreteNregs);
     }
     return eStatus;
 }

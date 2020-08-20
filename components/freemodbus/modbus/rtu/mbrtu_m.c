@@ -250,6 +250,7 @@ xMBMasterRTUReceiveFSM( void )
          * damaged frame are transmitted.
          */
     case STATE_M_RX_ERROR:
+        ESP_LOGE( MB_PORT_TAG, "RX ERROR");
         vMBMasterPortTimersT35Enable( );
         break;
 
@@ -285,6 +286,7 @@ xMBMasterRTUReceiveFSM( void )
         }
         else
         {
+            ESP_LOGE( MB_PORT_TAG, "RX ERROR 1");
             eRcvState = STATE_M_RX_ERROR;
         }
         vMBMasterPortTimersT35Enable( );

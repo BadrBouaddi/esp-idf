@@ -54,6 +54,7 @@
 #include "mbtcp.h"
 #endif
 
+#include "freertos/task.h"
 #if MB_MASTER_RTU_ENABLED || MB_MASTER_ASCII_ENABLED
 
 #ifndef MB_PORT_HAS_CLOSE
@@ -304,7 +305,9 @@ eMBMasterPoll( void )
                 vMBMasterSetErrorType(EV_ERROR_RECEIVE_DATA);
                 ESP_LOGD( MB_PORT_TAG, "%s: Packet data receive failed (addr=%u)(%u).",
                                        __func__, ucRcvAddress, eStatus);
+                ESP_LOGE( MB_PORT_TAG, "ERR 1");
                 ( void ) xMBMasterPortEventPost( EV_MASTER_ERROR_PROCESS );
+                ESP_LOGE( MB_PORT_TAG, "ERR 2");
             }
             MB_PORT_CLEAR_EVENT( eEvent, EV_MASTER_FRAME_RECEIVED );
         } else if ( MB_PORT_CHECK_EVENT( eEvent, EV_MASTER_EXECUTE ) ) {
@@ -319,6 +322,7 @@ eMBMasterPoll( void )
             if (ucFunctionCode & MB_FUNC_ERROR)
             {
                 eException = (eMBException)ucMBFrame[MB_PDU_DATA_OFF];
+                ESP_LOGE( MB_PORT_TAG, "Exception");
             } else {
                 for ( i = 0; i < MB_FUNC_HANDLERS_MAX; i++ )
                 {
@@ -355,7 +359,9 @@ eMBMasterPoll( void )
             if (eException != MB_EX_NONE)
             {
                 vMBMasterSetErrorType(EV_ERROR_EXECUTE_FUNCTION);
+                ESP_LOGE( MB_PORT_TAG, "ERR 3 %d", eException);
                 ( void ) xMBMasterPortEventPost( EV_MASTER_ERROR_PROCESS );
+                ESP_LOGE( MB_PORT_TAG, "ERR 4");
             }
             else
             {
@@ -381,6 +387,7 @@ eMBMasterPoll( void )
             /* Execute specified error process callback function. */
             errorType = eMBMasterGetErrorType( );
             vMBMasterGetPDUSndBuf( &ucMBFrame );
+            ESP_LOGE( MB_PORT_TAG, "error type = %d.", errorType);
             switch ( errorType )
             {
                 case EV_ERROR_RESPOND_TIMEOUT:
@@ -399,13 +406,15 @@ eMBMasterPoll( void )
                     ESP_LOGE( MB_PORT_TAG, "%s: incorrect error type = %d.", __func__, errorType);
                     break;
             }
+            ESP_LOGE( MB_PORT_TAG, "error step 1");
             vMBMasterRunResRelease( );
+            ESP_LOGE( MB_PORT_TAG, "error step 2");
             MB_PORT_CLEAR_EVENT( eEvent, EV_MASTER_ERROR_PROCESS );
         }
         if ( eEvent ) {
             // Event processing is done, but some poll events still set then
             // postpone its processing for next poll cycle (rare case).
-            ESP_LOGW( MB_PORT_TAG, "%s: Unprocessed event %d.", __func__, eEvent );
+            ESP_LOGE( MB_PORT_TAG, "%s: Unprocessed event %d.", __func__, eEvent );
             ( void ) xMBMasterPortEventPost( eEvent );
         }
     } else {
