@@ -19,6 +19,12 @@
 #pragma once
 #include "hal/uart_types.h"
 #include "soc/uart_periph.h"
+#include "esp_attr.h"
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // The default fifo depth
 #define UART_LL_FIFO_DEF_LEN  (UART_FIFO_LEN)
@@ -166,6 +172,9 @@ static inline void uart_ll_read_rxfifo(uart_dev_t *hw, uint8_t *buf, uint32_t rd
     uint32_t fifo_addr = (hw == &UART0) ? UART_FIFO_REG(0) : (hw == &UART1) ? UART_FIFO_REG(1) : UART_FIFO_REG(2);
     for(int i = 0; i < rd_len; i++) {
         buf[i] = READ_PERI_REG(fifo_addr);
+#ifdef CONFIG_COMPILER_OPTIMIZATION_PERF
+        __asm__ __volatile__("nop");
+#endif
     }
 }
 
@@ -178,7 +187,7 @@ static inline void uart_ll_read_rxfifo(uart_dev_t *hw, uint8_t *buf, uint32_t rd
  *
  * @return None
  */
-static inline void uart_ll_write_txfifo(uart_dev_t *hw, const uint8_t *buf, uint32_t wr_len)
+static inline void IRAM_ATTR uart_ll_write_txfifo(uart_dev_t *hw, const uint8_t *buf, uint32_t wr_len)
 {
     //Get the UART AHB fifo addr, Write fifo, we use AHB address
     uint32_t fifo_addr = (hw == &UART0) ? UART_FIFO_AHB_REG(0) : (hw == &UART1) ? UART_FIFO_AHB_REG(1) : UART_FIFO_AHB_REG(2);
@@ -194,7 +203,7 @@ static inline void uart_ll_write_txfifo(uart_dev_t *hw, const uint8_t *buf, uint
  *
  * @return None
  */
-static inline void uart_ll_rxfifo_rst(uart_dev_t *hw)
+static inline void IRAM_ATTR uart_ll_rxfifo_rst(uart_dev_t *hw)
 {
     //Hardware issue: we can not use `rxfifo_rst` to reset the hw rxfifo.
     uint16_t fifo_cnt;
@@ -215,14 +224,20 @@ static inline void uart_ll_rxfifo_rst(uart_dev_t *hw)
 /**
  * @brief  Reset the UART hw txfifo.
  *
+ * Note:   Due to hardware issue, reset UART1's txfifo will also reset UART2's txfifo.
+ *         So reserve this function for UART1 and UART2. Please do DPORT reset for UART and its memory at chip startup
+ *         to ensure the TX FIFO is reset correctly at the beginning.
+ *
  * @param  hw Beginning address of the peripheral registers.
  *
  * @return None
  */
 static inline void uart_ll_txfifo_rst(uart_dev_t *hw)
 {
-    hw->conf0.txfifo_rst = 1;
-    hw->conf0.txfifo_rst = 0;
+    if (hw == &UART0) {
+        hw->conf0.txfifo_rst = 1;
+        hw->conf0.txfifo_rst = 0;
+    }
 }
 
 /**
@@ -234,7 +249,21 @@ static inline void uart_ll_txfifo_rst(uart_dev_t *hw)
  */
 static inline uint32_t uart_ll_get_rxfifo_len(uart_dev_t *hw)
 {
-    return hw->status.rxfifo_cnt;
+    uint32_t fifo_cnt = hw->status.rxfifo_cnt;
+    typeof(hw->mem_rx_status) rx_status = hw->mem_rx_status;
+    uint32_t len = 0;
+    
+    // When using DPort to read fifo, fifo_cnt is not credible, we need to calculate the real cnt based on the fifo read and write pointer. 
+    // When using AHB to read FIFO, we can use fifo_cnt to indicate the data length in fifo.
+    if (rx_status.wr_addr > rx_status.rd_addr) {
+        len = rx_status.wr_addr - rx_status.rd_addr;
+    } else if (rx_status.wr_addr < rx_status.rd_addr) {
+        len = (rx_status.wr_addr + 128) - rx_status.rd_addr;
+    } else {
+        len = fifo_cnt > 0 ? 128 : 0;
+    }
+
+    return len;
 }
 
 /**
@@ -373,31 +402,6 @@ static inline void uart_ll_set_rx_idle_thr(uart_dev_t *hw, uint32_t rx_idle_thr)
 static inline void uart_ll_set_tx_idle_num(uart_dev_t *hw, uint32_t idle_num)
 {
     hw->idle_conf.tx_idle_num = idle_num;
-}
-
-/**
- * @brief  Configure the timeout value for receiver receiving a byte, and enable rx timeout function.
- *
- * @param  hw Beginning address of the peripheral registers.
- * @param  tout_thr The timeout value. The rx timeout function will be disabled if `tout_thr == 0`.
- *
- * @return None.
- */
-static inline void uart_ll_set_rx_tout(uart_dev_t *hw, uint8_t tout_thr)
-{
-    // The tout_thresh = 1, defines TOUT interrupt timeout equal to
-    // transmission time of one symbol (~11 bit) on current baudrate
-    if (hw->conf0.tick_ref_always_on == 0) {
-        //Hardware issue workaround: when using ref_tick, the rx timeout threshold needs increase to 10 times.
-        //T_ref = T_apb * APB_CLK/(REF_TICK << CLKDIV_FRAG_BIT_WIDTH)
-        tout_thr = tout_thr * UART_LL_TOUT_REF_FACTOR_DEFAULT;
-    }
-    if(tout_thr > 0) {
-        hw->conf1.rx_tout_thrhd = tout_thr;
-        hw->conf1.rx_tout_en = 1;
-    } else {
-        hw->conf1.rx_tout_en = 0;
-    }
 }
 
 /**
@@ -698,7 +702,7 @@ static inline void uart_ll_set_mode(uart_dev_t *hw, uart_mode_t mode)
  *
  * @return None.
  */
-static inline void uart_ll_get_at_cmd_char(uart_dev_t *hw, uint8_t *cmd_char, uint8_t *char_num)
+static inline void IRAM_ATTR uart_ll_get_at_cmd_char(uart_dev_t *hw, uint8_t *cmd_char, uint8_t *char_num)
 {
     *cmd_char = hw->at_cmd_char.data;
     *char_num = hw->at_cmd_char.char_num;
@@ -736,7 +740,7 @@ static inline void uart_ll_get_data_bit_num(uart_dev_t *hw, uart_word_length_t *
  *
  * @return True if the state machine is in the IDLE state, otherwise false is returned.
  */
-static __attribute__((always_inline)) inline bool uart_ll_is_tx_idle(uart_dev_t *hw)
+static inline IRAM_ATTR bool uart_ll_is_tx_idle(uart_dev_t *hw)
 {
     return ((hw->status.txfifo_cnt == 0) && (hw->status.st_utx_out == 0));
 }
@@ -801,4 +805,72 @@ static inline void uart_ll_inverse_signal(uart_dev_t *hw, uint32_t inv_mask)
     hw->conf0.val = conf0_reg.val;
 }
 
+/**
+ * @brief  Configure the timeout value for receiver receiving a byte, and enable rx timeout function.
+ *
+ * @param  hw Beginning address of the peripheral registers.
+ * @param  tout_thr The timeout value as a bit time. The rx timeout function will be disabled if `tout_thr == 0`.
+ *
+ * @return None.
+ */
+static inline void uart_ll_set_rx_tout(uart_dev_t *hw, uint16_t tout_thr)
+{
+    if (hw->conf0.tick_ref_always_on == 0) {
+        //Hardware issue workaround: when using ref_tick, the rx timeout threshold needs increase to 10 times.
+        //T_ref = T_apb * APB_CLK/(REF_TICK << CLKDIV_FRAG_BIT_WIDTH)
+        tout_thr = tout_thr * UART_LL_TOUT_REF_FACTOR_DEFAULT;
+    } else {
+        //If APB_CLK is used: counting rate is BAUD tick rate / 8
+        tout_thr = (tout_thr + 7) / 8;
+    }
+    if (tout_thr > 0) {
+        hw->conf1.rx_tout_thrhd = tout_thr;
+        hw->conf1.rx_tout_en = 1;
+    } else {
+        hw->conf1.rx_tout_en = 0;
+    }
+}
+
+/**
+ * @brief  Get the timeout value for receiver receiving a byte.
+ *
+ * @param  hw Beginning address of the peripheral registers.
+ *
+ * @return tout_thr The timeout threshold value. If timeout feature is disabled returns 0.
+ */
+static inline uint16_t uart_ll_get_rx_tout_thr(uart_dev_t *hw)
+{
+    uint16_t tout_thrd = 0;
+    if (hw->conf1.rx_tout_en > 0) {
+        if (hw->conf0.tick_ref_always_on == 0) {
+            tout_thrd = (uint16_t)(hw->conf1.rx_tout_thrhd / UART_LL_TOUT_REF_FACTOR_DEFAULT);
+        } else {
+            tout_thrd = (uint16_t)(hw->conf1.rx_tout_thrhd  << 3);
+        }
+    }
+    return tout_thrd;
+}
+
+/**
+ * @brief  Get UART maximum timeout threshold.
+ *
+ * @param  hw Beginning address of the peripheral registers.
+ *
+ * @return maximum timeout threshold.
+ */
+static inline uint16_t uart_ll_max_tout_thrd(uart_dev_t *hw)
+{
+    uint16_t tout_thrd = 0;
+    if (hw->conf0.tick_ref_always_on == 0) {
+        tout_thrd = (uint16_t)(UART_RX_TOUT_THRHD_V / UART_LL_TOUT_REF_FACTOR_DEFAULT);
+    } else {
+        tout_thrd = (uint16_t)(UART_RX_TOUT_THRHD_V  << 3);
+    }
+    return tout_thrd;
+}
+
 #undef UART_LL_TOUT_REF_FACTOR_DEFAULT
+
+#ifdef __cplusplus
+}
+#endif
