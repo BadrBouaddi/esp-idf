@@ -142,7 +142,7 @@ static esp_err_t mbc_serial_master_destroy(void)
     MB_MASTER_CHECK((mb_error == MB_ENOERR), ESP_ERR_INVALID_STATE,
             "mb stack close failure returned (0x%x).", (uint32_t)mb_error);
     free(mbm_interface_ptr); // free the memory allocated for options
-    vMBPortSetMode((UCHAR)MB_PORT_INACTIVE);
+    vMBMasterPortSetMode((UCHAR)MB_PORT_INACTIVE);
     mbm_interface_ptr = NULL;
     return ESP_OK;
 }
@@ -670,7 +670,7 @@ esp_err_t mbc_serial_master_create(mb_port_type_t port_type, void** handler)
     mb_master_options_t* mbm_opts = &mbm_interface_ptr->opts;
     mbm_opts->port_type = MB_PORT_SERIAL_MASTER;
 
-    vMBPortSetMode((UCHAR)MB_PORT_SERIAL_MASTER);
+    vMBMasterPortSetMode((UCHAR)MB_PORT_SERIAL_MASTER);
     mbm_opts->mbm_comm.mode = MB_MODE_RTU;
     mbm_opts->mbm_comm.port = MB_UART_PORT;
     mbm_opts->mbm_comm.baudrate = MB_DEVICE_SPEED;

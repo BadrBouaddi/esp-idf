@@ -43,6 +43,7 @@
 /* ----------------------- Variables ----------------------------------------*/
 static _lock_t s_port_lock;
 static UCHAR ucPortMode = 0;
+static UCHAR ucMasterPortMode = 0;
 
 /* ----------------------- Start implementation -----------------------------*/
 inline void
@@ -68,5 +69,19 @@ vMBPortSetMode( UCHAR ucMode ) // TODO renamed based on EQ-703
 {
     ENTER_CRITICAL_SECTION();
     ucPortMode = ucMode;
+    EXIT_CRITICAL_SECTION();
+}
+
+UCHAR
+ucMBMasterPortGetMode( void ) // TODO renamed based on EQ-703
+{
+    return ucMasterPortMode;
+}
+
+void
+vMBMasterPortSetMode( UCHAR ucMode ) // TODO renamed based on EQ-703
+{
+    ENTER_CRITICAL_SECTION();
+    ucMasterPortMode = ucMode;
     EXIT_CRITICAL_SECTION();
 }

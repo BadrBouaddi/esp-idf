@@ -89,6 +89,8 @@ void vMBPortExitCritical(void);
 
 void vMBPortSetMode( UCHAR ucMode );
 UCHAR ucMBPortGetMode( void );
+void vMBMasterPortSetMode( UCHAR ucMode );
+UCHAR ucMBMasterPortGetMode( void );
 #ifdef __cplusplus
 PR_END_EXTERN_C
 #endif /* __cplusplus */
