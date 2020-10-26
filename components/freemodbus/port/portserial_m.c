@@ -66,6 +66,9 @@ static BOOL bTxStateEnabled = FALSE; // Transmitter enabled flag
 
 static SemaphoreHandle_t xMasterSemaRxHandle; // Rx blocking semaphore handle
 
+static UCHAR ucBuffer[MB_SERIAL_BUF_SIZE]; // Temporary buffer to transfer received data to modbus stack
+static USHORT uiRxBufferPos = 0;    // position in the receiver buffer
+
 static BOOL xMBMasterPortRxSemaInit( void )
 {
     xMasterSemaRxHandle = xSemaphoreCreateBinary();
@@ -103,6 +106,8 @@ void vMBMasterPortSerialEnable(BOOL bRxEnable, BOOL bTxEnable)
     // This function can be called from xMBRTUTransmitFSM() of different task
     if (bTxEnable) {
         bTxStateEnabled = TRUE;
+	uiRxBufferPos = 0;
+        uart_flush_input(ucUartNumber); // <<< flush input buffer with expired response before send the new master transaction
     } else {
         bTxStateEnabled = FALSE;
     }
@@ -117,27 +122,27 @@ void vMBMasterPortSerialEnable(BOOL bRxEnable, BOOL bTxEnable)
     }
 }
 
-static USHORT usMBMasterPortSerialRxPoll(size_t xEventSize)
+static void vMBMasterPortSerialRxPoll(size_t xEventSize)
 {
-    BOOL xReadStatus = TRUE;
-    USHORT usCnt = 0;
+    USHORT usLength;
 
-    xReadStatus = xMBMasterPortRxSemaTake(MB_SERIAL_RX_SEMA_TOUT);
-    if (xReadStatus) {
-        while(xReadStatus && (usCnt++ <= xEventSize)) {
-            // Call the Modbus stack callback function and let it fill the stack buffers.
-            xReadStatus = pxMBMasterFrameCBByteReceived(); // callback to receive FSM
+    if (bRxStateEnabled) {
+        if (xEventSize > 0) {
+            xEventSize = (xEventSize > MB_SERIAL_BUF_SIZE) ?  MB_SERIAL_BUF_SIZE : xEventSize;
+            // Get received packet into Rx buffer
+            usLength = uart_read_bytes(ucUartNumber, &ucBuffer[0], xEventSize, portMAX_DELAY);
+            uiRxBufferPos = 0;
+            for(USHORT usCnt = 0; usCnt < usLength; usCnt++ ) {
+                // Call the Modbus stack callback function and let it fill the stack buffers.
+                ( void )pxMBMasterFrameCBByteReceived(); // calls callback xMBRTUReceiveFSM()
+            }
+            // The buffer is transferred into Modbus stack and is not needed here any more
+            uart_flush_input(ucUartNumber);
+            ESP_LOGD(TAG, "RX_T35_timeout: %d(bytes in buffer)\n", (uint32_t)usLength);
         }
-#if !CONFIG_FMB_TIMER_PORT_ENABLED
-        pxMBMasterPortCBTimerExpired();
-#endif
-        // The buffer is transferred into Modbus stack and is not needed here any more
-        uart_flush_input(ucUartNumber);
-        ESP_LOGD(TAG, "Received data: %d(bytes in buffer)\n", (uint32_t)usCnt);
     } else {
-        ESP_LOGE(TAG, "%s: bRxState disabled but junk data (%d bytes) received. ", __func__, xEventSize);
+        ESP_LOGE(TAG, "%s: bRxState disabled but junk data (%d bytes) received. ", __func__, (uint16_t)xEventSize);
     }
-    return usCnt;
 }
 
 BOOL xMBMasterPortSerialTxPoll(void)
@@ -191,7 +196,7 @@ static void vUartTask(void* pvParameters)
                         // Get buffered data length
                         ESP_ERROR_CHECK(uart_get_buffered_data_len(ucUartNumber, &xEvent.size));
                         // Read received data and send it to modbus stack
-                        usResult = usMBMasterPortSerialRxPoll(xEvent.size);
+                        vMBMasterPortSerialRxPoll(xEvent.size);
                         ESP_LOGD(TAG,"Timeout occurred, processed: %d bytes", usResult);
                         // Block receiver task until data is not processed
                         vTaskSuspend(NULL);
@@ -327,6 +332,9 @@ BOOL xMBMasterPortSerialPutByte(CHAR ucByte)
 BOOL xMBMasterPortSerialGetByte(CHAR* pucByte)
 {
     assert(pucByte != NULL);
-    USHORT usLength = uart_read_bytes(ucUartNumber, (uint8_t*)pucByte, 1, MB_SERIAL_RX_TOUT_TICKS);
-    return (usLength == 1);
+    MB_PORT_CHECK((uiRxBufferPos < MB_SERIAL_BUF_SIZE),
+            FALSE, "mb stack serial get byte failure.");
+    *pucByte = ucBuffer[uiRxBufferPos];
+    uiRxBufferPos++;
+    return TRUE;
 }
