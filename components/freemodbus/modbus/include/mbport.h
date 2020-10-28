@@ -113,6 +113,8 @@ BOOL            xMBMasterPortEventPost( eMBMasterEventType eEvent );
 
 BOOL            xMBMasterPortEventGet(  /*@out@ */ eMBMasterEventType * eEvent );
 
+void            xMBMasterPortEventFlush(void);
+
 void            vMBMasterOsResInit( void );
 
 BOOL            xMBMasterRunResTake( LONG time );

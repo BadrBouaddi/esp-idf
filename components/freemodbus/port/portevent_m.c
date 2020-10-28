@@ -135,6 +135,23 @@ xMBMasterPortEventGet( eMBMasterEventType * eEvent)
     return xEventHappened;
 }
 
+/**
+ * This flushes the remaining events.
+ * This function is required as a workaround for Espressif ticket IDFGH-3829.
+ *
+ */
+void
+xMBMasterPortEventFlush(void)
+{
+    EventBits_t uxBits;
+
+    uxBits = xEventGroupWaitBits( xEventGroupMasterHdl, // The event group being tested.
+                                    MB_EVENT_POLL_MASK | MB_EVENT_REQ_MASK, // The bits within the event group to wait for.
+                                    pdTRUE,             // Masked bits should be cleared before returning.
+                                    pdFALSE,            // Don't wait for both bits, either bit will do.
+                                    0);     // Instant check.
+}
+
 // This function is initialize the OS resource for modbus master.
 void vMBMasterOsResInit( void )
 {

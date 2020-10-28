@@ -387,6 +387,8 @@ eMBMasterPoll( void )
             } else if ( MB_PORT_CHECK_EVENT( eEvent, EV_MASTER_ERROR_PROCESS ) ) {
                 ESP_LOGD( MB_PORT_TAG, "%s:EV_MASTER_ERROR_PROCESS", __func__ );
                 /* Execute specified error process callback function. */
+                // Workaround for Espressif issue IDFGH-3829
+                vMBMasterPortTimersDisable();
                 errorType = eMBMasterGetErrorType( );
                 vMBMasterGetPDUSndBuf( &ucMBFrame );
                 switch ( errorType )
@@ -412,6 +414,8 @@ eMBMasterPoll( void )
                 }
                 vMBMasterRunResRelease( );
                 MB_PORT_CLEAR_EVENT( eEvent, EV_MASTER_ERROR_PROCESS );
+                // Workaround for Espressif issue IDFGH-3829
+                eEvent = 0;
             }
        }
     } else {

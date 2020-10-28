@@ -215,6 +215,9 @@ eMBMasterRTUSend( UCHAR ucSlaveAddress, const UCHAR * pucFrame, USHORT usLength 
 
         /* Activate the transmitter. */
         eSndState = STATE_M_TX_XMIT;
+        // Workaround for Espressif issue IDFGH-3829
+        xMBMasterPortEventFlush();
+        vMBMasterPortTimersDisable();
         // The place to enable RS485 driver
         vMBMasterPortSerialEnable( FALSE, TRUE );
     }
