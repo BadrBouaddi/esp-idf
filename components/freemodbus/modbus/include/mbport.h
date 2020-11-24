@@ -75,12 +75,14 @@ typedef enum {
     EV_MASTER_ERROR_RESPOND_TIMEOUT = 0x0080,   /*!< Request respond timeout. */
     EV_MASTER_ERROR_RECEIVE_DATA = 0x0100,      /*!< Request receive data error. */
     EV_MASTER_ERROR_EXECUTE_FUNCTION = 0x0200,  /*!< Request execute function error. */
+    EV_MASTER_ERROR_SEND_FRAME = 0x0400,        /*!< Request send frame error. */
 } eMBMasterEventType;
 
 typedef enum {
     EV_ERROR_RESPOND_TIMEOUT,  /*!< Slave respond timeout. */
     EV_ERROR_RECEIVE_DATA,     /*!< Receive frame data erroe. */
     EV_ERROR_EXECUTE_FUNCTION, /*!< Execute function error. */
+    EV_ERROR_SEND_FRAME,       /*!< Send frame error. */
     EV_ERROR_OK                /*!< Data processed. */
 } eMBMasterErrorEventType;
 #endif
@@ -185,6 +187,9 @@ void            vMBMasterErrorCBReceiveData( UCHAR ucDestAddress, const UCHAR* p
 
 void            vMBMasterErrorCBExecuteFunction( UCHAR ucDestAddress, const UCHAR* pucPDUData,
                                                  USHORT ucPDULength );
+
+void            vMBMasterErrorCBSendFrame( UCHAR ucDestAddress, const UCHAR* pucPDUData,
+                                           USHORT ucPDULength);
 
 void            vMBMasterCBRequestSuccess( void );
 

@@ -376,6 +376,8 @@ eMBMasterPoll( void )
                 eStatus = peMBMasterFrameSendCur( ucMBMasterGetDestAddress(), ucMBFrame, usMBMasterGetPDUSndLength() );
                 if (eStatus != MB_ENOERR)
                 {
+                    vMBMasterSetErrorType(EV_ERROR_SEND_FRAME);
+                    ( void ) xMBMasterPortEventPost( EV_MASTER_ERROR_PROCESS );
                     ESP_LOGE( MB_PORT_TAG, "%s:Frame send error. %d", __func__, eStatus );
                 } else {
                     ESP_LOG_BUFFER_HEX_LEVEL("POLL SENT buffer", (void*)ucMBFrame, usMBMasterGetPDUSndLength(), ESP_LOG_DEBUG);
@@ -403,6 +405,10 @@ eMBMasterPoll( void )
                         break;
                     case EV_ERROR_EXECUTE_FUNCTION:
                         vMBMasterErrorCBExecuteFunction( ucMBMasterGetDestAddress( ),
+                                ucMBFrame, usMBMasterGetPDUSndLength( ) );
+                        break;
+                    case EV_ERROR_SEND_FRAME:
+                        vMBMasterErrorCBSendFrame( ucMBMasterGetDestAddress( ),
                                 ucMBFrame, usMBMasterGetPDUSndLength( ) );
                         break;
                     case EV_ERROR_OK:
