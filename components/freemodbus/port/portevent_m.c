@@ -60,7 +60,8 @@
 #define MB_EVENT_REQ_MASK   (EventBits_t)( EV_MASTER_PROCESS_SUCCESS | \
                                             EV_MASTER_ERROR_RESPOND_TIMEOUT | \
                                             EV_MASTER_ERROR_RECEIVE_DATA | \
-                                            EV_MASTER_ERROR_EXECUTE_FUNCTION )
+                                            EV_MASTER_ERROR_EXECUTE_FUNCTION | \
+                                            EV_MASTER_ERROR_SEND_FRAME )
 
 
 /* ----------------------- Variables ----------------------------------------*/
@@ -238,6 +239,23 @@ void vMBMasterErrorCBExecuteFunction(UCHAR ucDestAddress, const UCHAR* pucPDUDat
 }
 
 /**
+ * This is modbus master send frame error process callback function.
+ * @note There functions will block modbus master poll while execute OS waiting.
+ * So,for real-time of system.Do not execute too much waiting process.
+ *
+ * @param ucDestAddress destination salve address
+ * @param pucPDUData PDU buffer data
+ * @param ucPDULength PDU buffer length
+ *
+ */
+void vMBMasterErrorCBSendFrame(UCHAR ucDestAddress, const UCHAR* pucPDUData, USHORT ucPDULength)
+{
+    BOOL ret = xMBMasterPortEventPost(EV_MASTER_ERROR_SEND_FRAME);
+    MB_PORT_CHECK((ret == TRUE), ; , "%s: Post event 'EV_MASTER_ERROR_SEND_FRAME' failed!", __func__);
+    ESP_LOGD(MB_PORT_TAG,"%s:Callback execute data handler failure.", __func__);
+}
+
+/**
  * This is modbus master request process success callback function.
  * @note There functions will block modbus master poll while execute OS waiting.
  * So,for real-time of system. Do not execute too much waiting process.
@@ -285,6 +303,8 @@ eMBMasterReqErrCode eMBMasterWaitRequestFinish( void ) {
             eErrStatus = MB_MRE_REV_DATA;
         } else if (MB_PORT_CHECK_EVENT(xRecvedEvent, EV_MASTER_ERROR_EXECUTE_FUNCTION)) {
             eErrStatus = MB_MRE_EXE_FUN;
+        } else if (MB_PORT_CHECK_EVENT(xRecvedEvent, EV_MASTER_ERROR_SEND_FRAME)) {
+            eErrStatus = MB_MRE_SEND_FRAME;
         }
     } else {
         ESP_LOGE(MB_PORT_TAG,"%s: Incorrect event or timeout xRecvedEvent = 0x%x", __func__, uxBits);

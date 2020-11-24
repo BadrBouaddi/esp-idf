@@ -85,7 +85,8 @@ typedef enum
     MB_MRE_REV_DATA,                /*!< receive data error. */
     MB_MRE_TIMEDOUT,                /*!< timeout error occurred. */
     MB_MRE_MASTER_BUSY,             /*!< master is busy now. */
-    MB_MRE_EXE_FUN                  /*!< execute function error. */
+    MB_MRE_EXE_FUN,                 /*!< execute function error. */
+    MB_MRE_SEND_FRAME               /*!< send frame error. */
 } eMBMasterReqErrCode;
 
 /*! \ingroup modbus
