@@ -150,6 +150,17 @@ eMBMasterRTUStop( void )
     EXIT_CRITICAL_SECTION(  );
 }
 
+void
+eMBMasterRTUReset( void )
+{
+    ENTER_CRITICAL_SECTION(  );
+
+    eRcvState = STATE_M_RX_IDLE;
+    eSndState = STATE_M_TX_IDLE;
+
+    EXIT_CRITICAL_SECTION(  );
+}
+
 eMBErrorCode
 eMBMasterRTUReceive( UCHAR * pucRcvAddress, UCHAR ** pucFrame, USHORT * pusLength )
 {

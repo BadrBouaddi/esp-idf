@@ -56,6 +56,7 @@ BOOL            xMBRTUTimerT35Expired( void );
 eMBErrorCode    eMBMasterRTUInit( UCHAR ucPort, ULONG ulBaudRate,eMBParity eParity );
 void            eMBMasterRTUStart( void );
 void            eMBMasterRTUStop( void );
+void            eMBMasterRTUReset( void );
 eMBErrorCode    eMBMasterRTUReceive( UCHAR * pucRcvAddress, UCHAR ** pucFrame, USHORT * pusLength );
 eMBErrorCode    eMBMasterRTUSend( UCHAR slaveAddress, const UCHAR * pucFrame, USHORT usLength );
 BOOL            xMBMasterRTUReceiveFSM( void );
