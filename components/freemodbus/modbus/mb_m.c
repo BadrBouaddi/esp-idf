@@ -391,6 +391,7 @@ eMBMasterPoll( void )
                 /* Execute specified error process callback function. */
                 // Workaround for Espressif issue IDFGH-3829
                 vMBMasterPortTimersDisable();
+                eMBMasterRTUReset();
                 errorType = eMBMasterGetErrorType( );
                 vMBMasterGetPDUSndBuf( &ucMBFrame );
                 switch ( errorType )
